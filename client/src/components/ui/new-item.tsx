@@ -1,10 +1,10 @@
 import { FilePlus, FolderPlus } from "lucide-react"
 import { Button } from "./button"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog"
+import { Dialog, DialogClose, DialogContent,  DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog"
 import { Label } from "./label"
 import { Input } from "./input"
 import { useState } from "react"
-import { getFile, getFiles, getFolder, upsertFile, upsertFolder } from "../../api/requests"
+import { getFolder, upsertFile, upsertFolder } from "../../api/requests"
 import { toast } from "sonner"
 
 type Prop = {
@@ -17,6 +17,28 @@ type Prop = {
 export function NewItem({ type, path, onChange, variant } : Prop) {
     const [name, setName] = useState("");
     const [open, setOpen] = useState(false);
+    const createItem = async () => {
+        try {
+            const files = await getFolder(path, null);
+            if (!files) {
+                toast.error("Error creating new item");
+                return;
+            }
+            const alreadyExists = files.filter(x => x.name == name + (type === "file" ? ".md" : ""))
+            if (alreadyExists.length !== 0)
+                toast.error(`The ${type} already exists`);
+            else {
+                if (type === "file") await upsertFile(path + name + ".md", null, new Blob());
+                else await upsertFolder(path + name, null);
+                onChange();
+                setOpen(false);
+            }
+        } catch {
+            toast.error("Cannot create new item");
+            setOpen(false);
+        }
+        
+    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -30,32 +52,17 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
             <DialogTitle>New {type}</DialogTitle>
           </DialogHeader>
           <Label>Name</Label>
-          <Input type="text" onChange={(e) => setName(e.target.value)} />
+          <Input onKeyDown={async e => {
+            if (e.key === "Enter")
+                await createItem();
+          }} type="text" onChange={(e) => setName(e.target.value)} />
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             </DialogClose>
             <Button 
                 type="submit"
-                onClick={async () => {
-                    try {
-                        const files = await getFolder(path, null);
-                        const alreadyExists = files.filter(x => x.name == name + (type === "file" ? ".md" : ""))
-                        if (alreadyExists.length !== 0)
-                            toast.error(`The ${type} already exists`);
-                        else {
-                            if (type === "file") await upsertFile(path + name + ".md", null, new Blob());
-                            else await upsertFolder(path + name, null);
-                            onChange();
-                            setOpen(false);
-                        }
-                    } catch {
-                        toast.error("Cannot create new item");
-                        setOpen(false);
-                    }
-                    
-                }
-                }
+                onClick={async () => await createItem()}
             >
             Create
             </Button>

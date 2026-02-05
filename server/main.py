@@ -58,7 +58,7 @@ class ConfigBase(CamelModel):
         "cyan",
         "magenta"
     ] = "neutral"
-    theme: Literal["light", "dark"] = "light"
+    theme: Literal["light", "dark", "system"] = "light"
     delete_confirmation: bool = True
 
 class ConfigModel(ConfigBase):
@@ -153,13 +153,13 @@ def create_dir(path: Path):
     if path.is_dir():
         raise HTTPException(status_code=400, detail="Directory already exists")
 
-def check_lock(path: Path, key: KeyModel | None):
+def check_lock(path: Path, key: str | None):
     key_path = path.with_suffix(path.suffix + ".lock")
     if key_path.exists():
         if not key:
             raise HTTPException(status_code=403, detail="Key not provided")
         with open(key_path, "r") as key_file:
-            if key_file.read() != key.key:
+            if key_file.read() != key:
                 raise HTTPException(status_code=403, detail="Key is not valid")
             
 def auth_required(authorization: str | None = Header(None)):
@@ -193,16 +193,16 @@ def get_sub_notes(subpath: str, key: KeyModel | None = Body(default=None)):
     if not str(target_path).startswith(str(FILE_ROOT_PATH)):
         raise HTTPException(status_code=400, detail="Path is not valid")
     
-    check_lock(target_path, key)
+    check_lock(target_path, None if key is None else key.key)
     
     if target_path.is_file():
-        with open(target_path, "r") as f:
+        with open(target_path, "r", encoding="utf-8") as f:
             return Response(f.read(), media_type='application/octet-stream')
 
     return list_directory(target_path)
 
 @app.put("/files/{subpath:path}", dependencies=[Depends(auth_required)], status_code=204)
-async def put_file(subpath: str, key: KeyModel | None = Form(default=None), file: UploadFile | None = File(default=None)):
+async def put_file(subpath: str, key: str | None = Form(default=None), file: UploadFile | None = File(default=None)):
     target_path = (FILE_ROOT_PATH / subpath).resolve()
 
     check_lock(target_path, key)
@@ -221,7 +221,7 @@ def delete(subpath: str, key: KeyModel | None = Body(default=None)):
     if not target_path.exists():
         raise HTTPException(status_code=404, detail="Path not found")
     
-    check_lock(target_path, key)
+    check_lock(target_path, None if key is None else key.key)
     key_path = target_path.with_suffix(target_path.suffix + ".lock")
     if key_path.exists():
         os.remove(key_path)

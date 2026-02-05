@@ -1,9 +1,10 @@
 import { createContext } from "react";
-import type { Config } from "../models/requests";
+import { getColor } from "@/lib/utils";
+import type { MainContext } from "@/types/context";
 
 export const ConfigContext = createContext({
-  primaryColor: "red",
+  primaryColor: getColor("red"),
   theme: "light",
   auth: false,
   deleteConfirmation: false
-} as Config);
+} as MainContext);

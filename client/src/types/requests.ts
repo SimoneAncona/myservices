@@ -6,7 +6,7 @@ export type FolderItem = {
 
 export type Config = {
     primaryColor: "neutral" | "red",
-    theme: "dark" | "light",
+    theme: "dark" | "light" | "system",
     deleteConfirmation: boolean
     auth: boolean
 }
