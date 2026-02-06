@@ -188,6 +188,7 @@ def get_root_files():
 
 @app.post("/files/{subpath:path}", dependencies=[Depends(auth_required)])
 def get_sub_notes(subpath: str, key: KeyModel | None = Body(default=None)):
+    print(subpath)
     target_path = (FILE_ROOT_PATH / subpath).resolve()
 
     if not str(target_path).startswith(str(FILE_ROOT_PATH)):

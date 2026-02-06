@@ -30,7 +30,7 @@ export function FolderViewer() {
   return (
     <div className="flex flex-col w-full flex-1 space-y-2">
       {isLocked ? <LockAlert setLockPassword={setLockPassword} /> : <></>}
-      <ItemOptions lock={lockPassword} />
+      <ItemOptions lock={lockPassword} onDownload={() => {}} />
       {data &&
         data.length != 0 ?
         <ScrollArea className="w-full">

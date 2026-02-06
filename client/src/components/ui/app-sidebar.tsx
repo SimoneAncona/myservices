@@ -65,7 +65,7 @@ export function AppSidebar() {
           <Settings />
           Settings
         </Button> */}
-        <p className="font-mono text-sm text-primary/50">v1.0</p>
+        <p className="font-mono text-sm text-primary/50">v0.1</p>
       </SidebarFooter>
     </Sidebar>
   )

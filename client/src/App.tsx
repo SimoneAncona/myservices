@@ -1,10 +1,10 @@
 import { AppSidebar } from "@/components/ui/app-sidebar"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { getConfig, getVersion, init } from "./api/requests";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, XIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -18,6 +18,8 @@ import { useTheme } from "@/components/theme-provider"
 import { getColor } from "./lib/utils";
 import type { CurrentContent, MainContext } from "./types/context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./components/ui/tooltip";
+import { Kbd, KbdGroup } from "./components/ui/kbd";
 
 function setAccentColor(color: string) {
   const root = document.documentElement;
@@ -50,6 +52,17 @@ function App() {
   });
   const [content, setContent] = useState(null as CurrentContent | null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "q") {
+        e.preventDefault();
+        setContent(null);
+      }
+    }
+    document.addEventListener("keydown", handler, true)
+    return () => { document.removeEventListener("keydown", handler, true) }
+  })
 
   let context: MainContext = {
     primaryColor: getColor("red"),
@@ -115,14 +128,31 @@ function App() {
     )
   }
 
-
   return (
     data && "auth" in data ?
       <SidebarProvider>
         <ConfigContext.Provider value={context}>
           <AppSidebar />
           <main className="p-3 w-full flex flex-col h-screen overflow-hidden">
-            <SidebarTrigger />
+            <div className="flex justify-between">
+              <SidebarTrigger />
+              {content && 
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button className="size-5" onClick={() => setContent(null)} variant="outline">
+                      <XIcon className="size-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <KbdGroup>
+                      <Kbd>CTRL</Kbd>
+                      <span>+</span>
+                      <Kbd>Q</Kbd>
+                    </KbdGroup>
+                  </TooltipContent>
+                </Tooltip>
+              }
+            </div>
             <Toaster />
             {
               content === null ?

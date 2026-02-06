@@ -19,12 +19,49 @@ import { ItemOptions } from "@/components/ui/path";
 import { Placeholder } from '@tiptap/extensions'
 import { useQuery } from '@tanstack/react-query'
 
+const handleDownload = (fileName: string, content: string) => {
+  const text = content;
+  const element = document.createElement('a');
+  const file = new Blob([text], {type: 'text/plain'});
+  element.href = URL.createObjectURL(file);
+  element.download = fileName;
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+};
+
+const convertToMd = (html: string) => {
+  for (let i = 1; i <= 5; i++) 
+    html = html.replaceAll(`<h${i}>`, "#".repeat(i) + " ").replaceAll(`</h${i}>`, "\n\n");
+  html = html
+    .replaceAll("<p>", "")
+    .replaceAll("</p>", "  \n")
+    .replaceAll("<ul>", "")
+    .replaceAll("</ul>", "\n")
+    .replaceAll("<ol>", "")
+    .replaceAll("</ol>", "\n")
+    .replaceAll("<li>", "- ")
+    .replaceAll("</li>", "")
+    .replaceAll("<pre><code>", "```\n")
+    .replaceAll("</code></pre>", "\n```\n")
+    .replaceAll("<code>", "`")
+    .replaceAll("</code>", "`")
+    .replaceAll("<code>", "`")
+    .replaceAll("<em>", "_")
+    .replaceAll("</em>", "_")
+    .replaceAll("<strong>", "**")
+    .replaceAll("</strong>", "**")
+    .replaceAll("<label><input><span></span></label><div>", "")
+    .replaceAll("</div>", "\n")
+  return html
+}
+
 export function FileEditor() {
   const context = useContext(ConfigContext);
   const [lockPassword, setLockPassword] = useState(null as string | null);
   const [isLocked, setIsLocked] = useState(false);
   const { isError, data } = useQuery({
-    queryKey: [lockPassword, context, "file"],
+    queryKey: [lockPassword, context.mainState.content?.path, "file"],
     queryFn: async () => {
       setIsLocked(false);
       return await getFile(context.mainState.content!.path, lockPassword, () => {
@@ -33,8 +70,6 @@ export function FileEditor() {
       })
     }
   });
-  const [oldData, setOldData] = useState(null as string | null);
-
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const editor = useEditor({
     extensions: [
@@ -74,7 +109,6 @@ export function FileEditor() {
         })
       ],
       content: "",
-      autofocus: "all",
       editorProps: {
         attributes: {
           class: "prose max-w-none flex-1 prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none overflow-y-auto h-full" + (isDark ? " prose-invert" : "")
@@ -83,41 +117,47 @@ export function FileEditor() {
       
     });
 
-  useEffect(() => {
-      if (!editor) return;
+  const saveFile = useCallback(async (path: string, content: string, key: string | null) => {
+    try {
+      await upsertFile(
+        path,
+        key,
+        new Blob([content])
+      );
+    } catch {
+      toast.error("Unable to save the file");
+    }
+  }, []);
 
+  useEffect(() => {
+    if (!editor) return;
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+   
+    const onUpdate = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      const path = context.mainState.content!.path;
       const content = editor.getHTML();
-      if (content === oldData) return;
-      if (context.mainState.content === null) return;
+      const key = lockPassword;
+      timeoutId = setTimeout(() => {
+        saveFile(
+          path,
+          content,
+          key
+        );
+      }, 700)
+    };
 
-      upsertFile(context.mainState.content.path, lockPassword, new Blob([content]))
-        .catch(() => {
-          toast.error("Unable to autosave");
-        });
-  }, [context, editor, lockPassword, oldData]);
+    editor.on("update", onUpdate);
+    return () => { editor.off("update", onUpdate); }
+  }, [saveFile, context.mainState.content, editor, lockPassword]);
 
   useEffect(() => {
-    if (editor && data) {
+    if (editor && data !== undefined) {
+      editor.commands.clearContent(true);
       editor.commands.setContent(data);
     }
-  }, [editor, data, context]);
-  
-  const saveFile = useCallback(async () => {
-      const content = editor.getHTML();
-      if (content === oldData) return;
-      if (context.mainState.content === null) return;
-      setOldData(content);
-      try {
-        await upsertFile(context.mainState.content.path, lockPassword, new Blob([content]))
-      } catch {
-        toast.error("Unable to save the file");
-      }
-    }, [editor, lockPassword, oldData, context]);
-
-  useEffect(() => {
-    const intervalId = setInterval(saveFile, 10000);
-    return () => clearInterval(intervalId);
-  }, [saveFile]);
+  }, [editor, data, context.mainState.content?.path]);
 
   if (context.mainState.content === null) return <></>;
 
@@ -125,7 +165,17 @@ export function FileEditor() {
   return (
     <div className="flex flex-col flex-1 min-h-0 space-y-4">
       {isLocked && <LockAlert setLockPassword={setLockPassword} />}
-      <ItemOptions lock={lockPassword} />
+      <ItemOptions lock={lockPassword} onDownload={e => {
+        let content = editor.getHTML();
+        content = content.replace(/<(\w+)(\s+[^>]+?)?>/g, '<$1>');
+        const filename = context.mainState.content!.path.split("/").pop()!.split(".")[0];
+        if (e === "html") {
+          handleDownload(filename + ".html", content)
+          return
+        }
+        handleDownload(filename + ".md", convertToMd(content));
+
+      }} />
       <div className="flex flex-wrap gap-2 justify-center">
         <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold />

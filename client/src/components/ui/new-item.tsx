@@ -3,9 +3,12 @@ import { Button } from "./button"
 import { Dialog, DialogClose, DialogContent,  DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog"
 import { Label } from "./label"
 import { Input } from "./input"
-import { useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { getFolder, upsertFile, upsertFolder } from "../../api/requests"
 import { toast } from "sonner"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
+import { Kbd, KbdGroup } from "./kbd"
+import { ConfigContext } from "@/store/config"
 
 type Prop = {
     type: "file" | "directory",
@@ -17,6 +20,7 @@ type Prop = {
 export function NewItem({ type, path, onChange, variant } : Prop) {
     const [name, setName] = useState("");
     const [open, setOpen] = useState(false);
+    const context = useContext(ConfigContext);
     const createItem = async () => {
         try {
             const files = await getFolder(path, null);
@@ -40,16 +44,44 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
         
     };
 
+    const handleKeyPress = (e: KeyboardEvent) => {
+        if (path === "" && context.mainState.content) return;
+        if (e.ctrlKey && e.key === "g" && type === "file") {
+            e.preventDefault();
+            setOpen(true);
+        }
+        if (e.ctrlKey && e.key === "d" && type === "directory") {
+            e.preventDefault();
+            setOpen(true);
+        }
+    }
+    useEffect(() => {
+        document.addEventListener("keydown", handleKeyPress, true);
+
+        return () => { document.removeEventListener("keydown", handleKeyPress, true) }
+    })
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant={variant === "big" ? "outline" : "ghost"} className={variant === "big" ? "" : "size-7"}>
-                    {type === "file" ? <FilePlus /> : <FolderPlus />}
-                </Button>
+                <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                        <Button onClick={() => { setOpen(true) }} variant={variant === "big" ? "outline" : "ghost"} className={variant === "big" ? "" : "size-7"}>
+                            {type === "file" ? <FilePlus /> : <FolderPlus />}
+                        </Button>
+                    </TooltipTrigger>
+                    {(path !== "" || (path === "" && !context.mainState.content)) && <TooltipContent>
+                        <KbdGroup>
+                            <Kbd>CTRL</Kbd>
+                            <span>+</span>
+                            <Kbd>{type === "file" ? "G" : "D"}</Kbd>
+                        </KbdGroup>
+                    </TooltipContent>}
+                </Tooltip>
             </DialogTrigger>
             <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>New {type}</DialogTitle>
+            <DialogTitle>{path === "" ? `Create new ${type} in the root` : `New ${type}`}</DialogTitle>
           </DialogHeader>
           <Label>Name</Label>
           <Input onKeyDown={async e => {
