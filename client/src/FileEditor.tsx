@@ -159,6 +159,22 @@ export function FileEditor() {
     }
   }, [editor, data, context.mainState.content?.path]);
 
+  useEffect(() => {
+    const handleKeys = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "ArrowLeft") {
+        e.preventDefault();
+        const split = context.mainState.content!.path.split("/");
+        split.pop()
+        context.mainState.setContent({
+          path: split.join("/"),
+          type: "directory"
+        })
+      }
+    }
+    document.addEventListener("keydown", handleKeys, true);
+    return () => { document.removeEventListener("keydown", handleKeys, true); }
+  })
+
   if (context.mainState.content === null) return <></>;
 
   if (isError) toast.error("Cannot get file");
