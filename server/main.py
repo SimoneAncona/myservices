@@ -63,12 +63,14 @@ class ConfigBase(CamelModel):
     ] = "neutral"
     theme: Literal["light", "dark", "system"] = "light"
     delete_confirmation: bool = True
+    standalone: bool = False
 
 class ConfigModel(ConfigBase):
     token: str | None = None
 
 class ConfigResponse(ConfigBase):
     auth: bool
+    askai: bool
 
     @model_validator(mode="before")
     @classmethod
@@ -80,6 +82,13 @@ class ConfigResponse(ConfigBase):
 
         data = dict(data)
         data["auth"] = token is not None
+        return data
+    
+    @model_validator(mode="before")
+    @classmethod
+    def compute_askay(cls, data):
+        data = dict(data)
+        data["askai"] = os.getenv("MYFILES_AI_MODEL_PATH") is not None
         return data
     
 class KeyModel(CamelModel):

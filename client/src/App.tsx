@@ -45,7 +45,7 @@ function App() {
       if (version !== 1)
         throw "version";
       if (res !== null && "auth" in res) {
-        if (!res.auth)
+        if (!res.auth && !res.standalone)
           setTimeout(() => toast.warning("Authentication is not set!"), 3000);
       }
       return res;
@@ -70,6 +70,8 @@ function App() {
     theme: "light",
     auth: false,
     deleteConfirmation: false,
+    standalone: false,
+    askai: false,
     mainState: {
       setContent: setContent,
       content: content
@@ -155,7 +157,7 @@ function App() {
               }
             </div>
             <Toaster />
-            <AiCard />
+            { context.askai && <AiCard /> }
             {
               content === null ?
                 <div className="flex items-center justify-center h-screen">
