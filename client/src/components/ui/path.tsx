@@ -8,6 +8,7 @@ import { deleteFile } from "@/api/requests";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu";
+import { useMediaQuery } from "react-responsive";
 
 type Prop = {
   lock: string | null
@@ -19,14 +20,15 @@ export function ItemOptions({ lock, onDownload }: Prop) {
   const queryClient = useQueryClient();
 
   const invalidateFolder = () => { queryClient.invalidateQueries({ queryKey: ["folder"] }) }
+  const isMobile = useMediaQuery({ maxWidth: 800 });
 
   const context = useContext(ConfigContext);
   if (context.mainState.content === null) return;
   const split = context.mainState.content.path.split("/");
   split[split.length - 1] = split[split.length - 1].split(".")[0];
   return (
-    <div className="flex justify-between">
-      <div className="flex items-center w-4/5 overflow-auto">
+    <div className={"flex justify-between" + (isMobile ? " flex-col space-y-2" : "")}>
+      <div className={"flex items-center overflow-auto" + (isMobile ? " w-4/5" : "")}>
         {
           split.map((e, i) => {
             return (

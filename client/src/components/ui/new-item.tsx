@@ -21,6 +21,7 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
     const [name, setName] = useState("");
     const [open, setOpen] = useState(false);
     const context = useContext(ConfigContext);
+
     const createItem = async () => {
         try {
             const files = await getFolder(path, null);
@@ -44,18 +45,19 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
         
     };
 
-    const handleKeyPress = (e: KeyboardEvent) => {
-        if (path === "" && context.mainState.content) return;
-        if (e.ctrlKey && e.key === "g" && type === "file") {
-            e.preventDefault();
-            setOpen(true);
-        }
-        if (e.ctrlKey && e.key === "d" && type === "directory") {
-            e.preventDefault();
-            setOpen(true);
-        }
-    }
+    
     useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (path === "" && context.mainState.content) return;
+            if (e.ctrlKey && e.key === "g" && type === "file") {
+                e.preventDefault();
+                setOpen(true);
+            }
+            if (e.ctrlKey && e.key === "d" && type === "directory") {
+                e.preventDefault();
+                setOpen(true);
+            }
+        }
         document.addEventListener("keydown", handleKeyPress, true);
 
         return () => { document.removeEventListener("keydown", handleKeyPress, true) }

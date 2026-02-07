@@ -2,18 +2,21 @@ import os
 from pathlib import Path
 from typing import Literal
 from fastapi import Body, Depends, FastAPI, File, Form, HTTPException, Header, Query, Response, UploadFile
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, model_validator
 from fastapi.middleware.cors import CORSMiddleware
+from src.ai import generate_stream
+import sys
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:5173",
-]
+ORIGINS = os.getenv("MYFILES_ORIGINS")
+if not ORIGINS:
+    print("Warning: MYFILES_ORIGINS variabile not set, fallback to \"*\"", file=sys.stderr)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ORIGINS.split(",") if ORIGINS else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,7 +67,6 @@ class ConfigBase(CamelModel):
 class ConfigModel(ConfigBase):
     token: str | None = None
 
-
 class ConfigResponse(ConfigBase):
     auth: bool
 
@@ -85,6 +87,13 @@ class KeyModel(CamelModel):
 
 class TokenModel(CamelModel):
     token: str
+
+class PromptModel(CamelModel):
+    prompt: str
+
+class PromptKeyModel(CamelModel):
+    prompt: str
+    key: str | None = None
 
 def save_config(config: ConfigModel):
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
@@ -188,7 +197,6 @@ def get_root_files():
 
 @app.post("/files/{subpath:path}", dependencies=[Depends(auth_required)])
 def get_sub_notes(subpath: str, key: KeyModel | None = Body(default=None)):
-    print(subpath)
     target_path = (FILE_ROOT_PATH / subpath).resolve()
 
     if not str(target_path).startswith(str(FILE_ROOT_PATH)):
@@ -265,3 +273,39 @@ def lock(subpath: str, key: KeyModel = Body()):
 @app.get("/version", dependencies=[Depends(auth_required)])
 def version():
     return 1
+
+@app.post("/askai", dependencies=[Depends(auth_required)])
+async def generate(prompt: PromptModel = Body()):
+    system_prompt = f"""
+    You are a generic assistant, your task is to receive questions and reply with
+    maximum accuracy
+    """
+
+    return StreamingResponse(generate_stream(prompt=prompt.prompt, system=system_prompt), media_type="text/plain")
+
+@app.post("/askai/{subpath:path}", dependencies=[Depends(auth_required)])
+async def ask_ai_files(subpath: str, body: PromptKeyModel):
+    target_path = (FILE_ROOT_PATH / subpath).resolve()
+    
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="Path not found")
+    
+    check_lock(target_path, body.key)
+
+    system_prompt = f"""
+    You are a useful assistant, your task is to read the following file and
+    reply to the user questions as best as you can, one question could be: can
+    you make a summary of this file?
+
+    ======================= STARTING FILE ==========================
+    {{file}}
+    ======================= END OF FILE ============================
+    """
+
+    print(target_path)
+    if target_path.is_file():
+        with open(target_path, "r", encoding="utf-8") as f:
+            return StreamingResponse(generate_stream(system=system_prompt.replace("{file}", f.read()), prompt=body.prompt), media_type="text/plain")
+
+    else:
+        return Response(status_code=204)

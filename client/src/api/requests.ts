@@ -90,3 +90,54 @@ export async function getConfig() {
     if (response.status === 401) return { login: true };
     return response.data as Config;
 }
+
+export async function askAi(prompt: string, onUpdate: (token: string) => void) {
+    const token = localStorage.getItem("token");
+    const headers: HeadersInit = {
+        "Content-Type": "application/json"
+    }
+    if (token)
+        headers["Authorization"] = "Bearer " + token;
+    const response = await fetch(`${API_URL}/askai`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({prompt: prompt})
+    })
+    if (!response.ok || response.body === null) throw "An error occurred";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        onUpdate(chunk);
+    }
+
+}
+
+export async function askAiFile(prompt: string, path: string, key: string | null, onUpdate: (token: string) => void) {
+    const token = localStorage.getItem("token");
+    const headers: HeadersInit = {
+        "Content-Type": "application/json"
+    }
+    if (token)
+        headers["Authorization"] = "Bearer " + token
+    const response = await fetch(`${API_URL}/askai/${BASE_PATH}/${path}`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({prompt: prompt, key: key})
+    })
+    if (!response.ok || response.body === null) throw "An error occurred";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        onUpdate(chunk);
+    }
+}

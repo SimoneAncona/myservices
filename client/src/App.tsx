@@ -20,6 +20,7 @@ import type { CurrentContent, MainContext } from "./types/context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./components/ui/tooltip";
 import { Kbd, KbdGroup } from "./components/ui/kbd";
+import { AiCard } from "./components/ui/ai-card";
 
 function setAccentColor(color: string) {
   const root = document.documentElement;
@@ -154,6 +155,7 @@ function App() {
               }
             </div>
             <Toaster />
+            <AiCard />
             {
               content === null ?
                 <div className="flex items-center justify-center h-screen">
