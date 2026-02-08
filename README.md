@@ -1,22 +1,22 @@
-# My Service self-hosting solutions
+# My Service – Self-Hosting Solutions
 
-## Installation
+**My Service** is a free, open-source suite that lets you replace Google and Microsoft services with your own self-hosted alternatives. Keep full control of your data, protect your privacy, and run everything on your own server.
 
-Run the `./build.sh` script to build the project  
-Available options:
-- **none**: build the project for no specific targe
-- **win**: build standalone application for Windows (WIP)
-- **linux**: build standalone application for Linux (WIP)
-- **docker**: build the service for Docker (WIP)
+## What’s Included
 
-### Additional dependencies required:
-The python server uses `llama-cpp` in order to run, see https://llama-cpp-python.readthedocs.io/en/latest/ to set the environment variables **before building** the project
-
-UV package manager for python is required
+- **My Notes** – A simple, web-based note-taking app.  
+- **My Mails** – A fully self-hosted email client (WIP).  
+- **My Files** – Personal cloud storage, like a private Drive (WIP).  
+- **My Courses** – A classroom and course management platform (WIP).  
 
 
-## Configuration
-In order to run, the server needs several environment variables:
-- `MYFILES_ROOT_DIR`: the root directory, required
-- `MYFILES_ORIGINS`: accepted origins
-- `MYFILES_AI_MODEL_PATH`: the path to a GGUF ai model
+## Why Use My Service
+
+- **Open-source & self-hosted** – You run it, you control it.  
+- **Privacy-focused** – Your data never leaves your server.  
+- **Modular** – Use only the apps you need.  
+- **Familiar experience** – Tools designed to feel like the services you already use.  
+
+## Contributing
+
+Contributions are welcome. Open issues, submit pull requests, or help with documentation to make the suite better for everyone.
