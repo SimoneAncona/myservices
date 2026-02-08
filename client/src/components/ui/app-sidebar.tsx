@@ -126,7 +126,7 @@ export function AppSidebar() {
                           </KbdGroup>
                         </TooltipContent>
                       </Tooltip>
-                    : {button} }
+                    : button }
                     </>
                     
                   )

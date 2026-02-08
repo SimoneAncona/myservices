@@ -58,7 +58,7 @@ export function FolderViewer() {
 
   if (error) toast.error("Cannot get folder");
   return (
-    <div className="flex flex-col w-full flex-1 space-y-2">
+    <div className="flex flex-col w-full flex-1 space-y-2 h-full">
       {isLocked ? <LockAlert setLockPassword={setLockPassword} /> : <></>}
       <ItemOptions lock={lockPassword} onDownload={() => {}} />
       {data &&
