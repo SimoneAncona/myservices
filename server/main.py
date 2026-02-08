@@ -325,7 +325,7 @@ def lock(subpath: str, key: KeyModel = Body()):
 
 @app.get("/version", dependencies=[Depends(auth_required)])
 def version():
-    return 1
+    return 0
 
 @app.post("/askai", dependencies=[Depends(auth_required)])
 async def generate(prompt: PromptModel = Body()):

@@ -41,8 +41,8 @@ function App() {
         setTheme(res.theme);
       if ("primaryColor" in res)
         setAccentColor(getColor(res.primaryColor));
-      if (version !== 1)
-        throw "version";
+      if (version !== 0)
+        throw new Error("version");
       if (res !== null && "auth" in res) {
         if (!res.auth && !res.standalone)
           setTimeout(() => toast.warning("Authentication is not set!"), 3000);
@@ -94,7 +94,7 @@ function App() {
         <Alert variant={"destructive"} className="w-100">
           <AlertCircle />
           <AlertTitle>{error.message !== "version" ? "Cannot connect to server" : "Verion mismatch"}</AlertTitle>
-          <AlertDescription>{error.message !== "version" ? "Check that the server service is running" : "This client supports only 1.x APIs"}</AlertDescription>
+          <AlertDescription>{error.message !== "version" ? "Check that the server service is running" : "This client supports only 0.x APIs"}</AlertDescription>
         </Alert>
       </div>
     );
@@ -156,7 +156,7 @@ function App() {
         <Skeleton className="w-100" />
         <div className="space-y-5 w-full p-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton lock={i} className="h-6" />
+            <Skeleton key={i} className="h-6" />
           ))}
         </div>
       </div>

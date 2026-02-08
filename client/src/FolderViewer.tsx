@@ -66,7 +66,7 @@ export function FolderViewer() {
         <div className="w-full space-y-1 overflow-y-auto">
           {data.map((x, i) => {
             const button = <Button
-                  lock={i}
+                  key={i}
                   variant={"ghost"}
                   className="flex justify-start hover:cursor-pointer w-full"
                   onClick={() => context.mainState.setContent({
