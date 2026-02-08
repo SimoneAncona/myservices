@@ -65,7 +65,6 @@ class ConfigBase(CamelModel):
     ] = "neutral"
     theme: Literal["light", "dark", "system"] = "light"
     delete_confirmation: bool = True
-    standalone: bool = False
 
 class ConfigModel(ConfigBase):
     token: str | None = None

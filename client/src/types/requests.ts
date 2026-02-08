@@ -21,7 +21,6 @@ export type Config = {
     theme: "dark" | "light" | "system",
     deleteConfirmation: boolean
     auth: boolean,
-    standalone: boolean,
     askai: boolean
 }
 

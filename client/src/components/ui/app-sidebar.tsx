@@ -68,7 +68,7 @@ export function AppSidebar() {
   }
 
   const applyConfig = async () => {
-    await updateConfig({...config, standalone: mainContext.standalone});
+    await updateConfig({...config });
     queryClient.invalidateQueries({queryKey: ["config"]});
   }
 

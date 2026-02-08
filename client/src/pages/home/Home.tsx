@@ -1,9 +1,9 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { HardDrive, NotebookIcon } from "lucide-react";
+import { HardDrive, Mail, NotebookIcon, School } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Home() {
-    const paths = ["notes", "files"];
+    const paths = ["notes", "files", "mail", "courses"];
 
     return (
         <div className="fixed w-full h-full flex items-center justify-center space-x-10">
@@ -14,7 +14,9 @@ export default function Home() {
                             <Link to={e}>
                                 <div className="shadow-xl size-30 bg-primary-foreground hover:bg-accent transition-all border-2 border-accent flex justify-center items-center rounded-2xl">
                                     {e === "notes" ? <NotebookIcon size={40}/> :
-                                    e === "files" ? <HardDrive size={40} /> : <></>
+                                    e === "files" ? <HardDrive size={40} /> :
+                                    e === "mail" ? <Mail size={40} /> : 
+                                    e === "courses" ? <School size={40} /> : <></>
                                     }
                                 </div>
                             </Link>
