@@ -1,4 +1,4 @@
-import type { Config } from "./requests";
+import type { ColorType, Config } from "./requests";
 
 export type CurrentContent = {
   type: "file" | "directory",
@@ -7,7 +7,7 @@ export type CurrentContent = {
 
 
 export type MainContext = Omit<Config, "primaryColor"> & {
-    primaryColor: string
+    primaryColor: ColorType
     mainState: {
         setContent: (c: CurrentContent | null) => void,
         content: CurrentContent | null

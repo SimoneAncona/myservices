@@ -1,10 +1,10 @@
 import { AppSidebar } from "@/components/ui/app-sidebar"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
 import { useEffect, useState } from "react"
 import { getConfig, getVersion, init } from "./api/requests";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
-import { AlertCircle, XIcon } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
@@ -18,9 +18,8 @@ import { useTheme } from "@/components/theme-provider"
 import { getColor } from "./lib/utils";
 import type { CurrentContent, MainContext } from "./types/context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./components/ui/tooltip";
-import { Kbd, KbdGroup } from "./components/ui/kbd";
 import { AiCard } from "./components/ui/ai-card";
+import { SidebarTrigger } from "./components/ui/sidebar-trigger";
 
 function setAccentColor(color: string) {
   const root = document.documentElement;
@@ -66,7 +65,7 @@ function App() {
   })
 
   let context: MainContext = {
-    primaryColor: getColor("red"),
+    primaryColor: "red",
     theme: "light",
     auth: false,
     deleteConfirmation: false,
@@ -85,7 +84,7 @@ function App() {
         setContent: setContent,
         content: content
       },
-      primaryColor: getColor(data.primaryColor)
+      primaryColor: data.primaryColor
     } satisfies MainContext;
   }
 
@@ -102,7 +101,7 @@ function App() {
 
   if (data && "login" in data) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-dvh">
         <Toaster />
         <Card className="w-100">
           <CardHeader>
@@ -136,31 +135,13 @@ function App() {
       <SidebarProvider>
         <ConfigContext.Provider value={context}>
           <AppSidebar />
-          <main className="p-3 w-full flex flex-col h-screen overflow-hidden">
-            <div className="flex justify-between">
-              <SidebarTrigger />
-              {content && 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button className="size-5" onClick={() => setContent(null)} variant="outline">
-                      <XIcon className="size-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <KbdGroup>
-                      <Kbd>CTRL</Kbd>
-                      <span>+</span>
-                      <Kbd>Q</Kbd>
-                    </KbdGroup>
-                  </TooltipContent>
-                </Tooltip>
-              }
-            </div>
+          <main className="p-3 w-full flex flex-col h-dvh overflow-hidden">
             <Toaster />
+            { !content && <div><SidebarTrigger/></div> }
             { context.askai && <AiCard /> }
             {
               content === null ?
-                <div className="flex items-center justify-center h-screen">
+                <div className="flex items-center justify-center h-dvh">
                   <h1 className="font-bold text-4xl opacity-25">Workspace empty</h1>
                 </div>
                 :
@@ -171,7 +152,7 @@ function App() {
       </SidebarProvider>
 
       :
-      <div className="h-screen flex">
+      <div className="h-dvh flex">
         <Skeleton className="w-100" />
         <div className="space-y-5 w-full p-5">
           {Array.from({ length: 3 }).map((_, i) => (

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Config, FolderItem } from "../types/requests";
+import type { Config, FolderItem, UpdateConfig } from "../types/requests";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const BASE_PATH = "_MYSERVICE_notes/common";
@@ -52,6 +52,11 @@ export async function deleteFile(path: string, key: string | null) {
     await apiClient.delete(`/files/${BASE_PATH}/${path}`, { data: key === null ? null : { key: key } });
 }
 
+export async function downloadZip(path: string, key: string | null) {
+    const response = await apiClient.post(`/zip/${BASE_PATH}/${path}`, key === null ? null : { key: key }, { responseType: "arraybuffer" });
+    return response.data
+}
+
 export async function init() {
     try {
         const formData = new FormData();
@@ -89,6 +94,15 @@ export async function getConfig() {
     const response = await apiClient.get("/config");
     if (response.status === 401) return { login: true };
     return response.data as Config;
+}
+
+
+export async function updateConfig(config: UpdateConfig) {
+    await apiClient.put("/config", config, {
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
 }
 
 export async function askAi(prompt: string, onUpdate: (token: string) => void) {

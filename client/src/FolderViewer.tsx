@@ -74,7 +74,7 @@ export function FolderViewer() {
                     path: `${context.mainState.content!.path}/${x.name}`,
                   })}
                 >
-                  {x.type === "file" ? <File size={"20px"} fill={context.primaryColor} strokeWidth={0} /> : <Folder fill={context.primaryColor} strokeWidth={0} />}
+                  {x.type === "file" ? <File size={"20px"} fill="var(--accent)" strokeWidth={0} /> : <Folder fill="var(--accent)" strokeWidth={0} />}
                   <h1>{x.name.split(".")[0]}</h1>
                 </Button>
             return (

@@ -18,17 +18,8 @@ import { Bold, CheckSquare, Heading1, Heading2, Italic, List, TextIcon } from "l
 import { ItemOptions } from "@/components/ui/path";
 import { Placeholder } from '@tiptap/extensions'
 import { useQuery } from '@tanstack/react-query'
-
-const handleDownload = (fileName: string, content: string) => {
-  const text = content;
-  const element = document.createElement('a');
-  const file = new Blob([text], {type: 'text/plain'});
-  element.href = URL.createObjectURL(file);
-  element.download = fileName;
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
-};
+import { handleDownload } from "./lib/utils";
+import { useMediaQuery } from "react-responsive";
 
 const convertToMd = (html: string) => {
   for (let i = 1; i <= 5; i++) 
@@ -70,7 +61,8 @@ export function FileEditor() {
       })
     }
   });
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isMobile = useMediaQuery({ maxWidth: 800 });
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches && context.theme === "system" || context.theme === "dark";
   const editor = useEditor({
     extensions: [
         StarterKit.configure({
@@ -177,6 +169,42 @@ export function FileEditor() {
 
   if (context.mainState.content === null) return <></>;
 
+  const size = !isMobile ? "sm" : "lg";
+  const variant = !isMobile ? "outline" : "ghost"
+  const tools = (
+    <div className={"flex gap-2 px-2 justify-center overflow-auto" + (isMobile ? " bg-primary-foreground rounded-3xl" : "")}>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().toggleBold().run()}>
+        <Bold />
+      </Button>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().toggleItalic().run()}>
+        <Italic />
+      </Button>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+        <List />
+      </Button>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().clearNodes().toggleTaskList().run()}>
+        <CheckSquare />
+      </Button>
+      {/* <Button
+        variant="outline"
+        size="sm"
+        onClick={() =>
+        editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+        }
+      >
+        <Table2 />
+      </Button> */}
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().setParagraph().run()}>
+        <TextIcon />
+      </Button>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+        <Heading1 />
+      </Button>
+      <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+        <Heading2 />
+      </Button>
+    </div>)
+
   if (isError) toast.error("Cannot get file");
   return (
     <div className="flex flex-col flex-1 min-h-0 space-y-4">
@@ -192,43 +220,13 @@ export function FileEditor() {
         handleDownload(filename + ".md", convertToMd(content));
 
       }} />
-      <div className="flex flex-wrap gap-2 justify-center">
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleBold().run()}>
-          <Bold />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleItalic().run()}>
-          <Italic />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleBulletList().run()}>
-          <List />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().clearNodes().toggleTaskList().run()}>
-          <CheckSquare />
-        </Button>
-        {/* <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-          }
-        >
-          <Table2 />
-        </Button> */}
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().setParagraph().run()}>
-          <TextIcon />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
-          <Heading1 />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
-          <Heading2 />
-        </Button>
-      </div>
+      {!isMobile && tools}
       <EditorContent
         spellCheck={false}
         editor={editor}
         className="prose max-w-none flex-1 h-full overflow-auto"
-      />
+        />
+      {isMobile && tools}
     </div>
   )
 }

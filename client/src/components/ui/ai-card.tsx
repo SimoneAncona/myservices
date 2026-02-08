@@ -1,12 +1,14 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react"
 import { createPortal } from 'react-dom';
-import { SendHorizonal, Sparkles } from "lucide-react";
+import { SendHorizonal, Sparkles, XIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 import { Kbd, KbdGroup } from "./kbd";
 import { askAi, askAiFile } from "@/api/requests";
 import { ConfigContext } from "@/store/config";
 import Markdown from "react-markdown";
+import { useMediaQuery } from "react-responsive";
+import { Button } from "./button";
 
 type AiMessage = {
     type: "assistant" | "user"
@@ -19,6 +21,7 @@ export function AiCard() {
     const [data, setData] = useState([] as AiMessage[]);
     const scrollRef = useRef(null as HTMLDivElement | null);
     const context = useContext(ConfigContext);
+    const isMobile = useMediaQuery({ maxWidth: 800 });
 
      const onSend = async () => {
         const updatedData = [...data, {type: "user", content: input}] satisfies AiMessage[]
@@ -29,7 +32,7 @@ export function AiCard() {
             content = content + t
             setData([...updatedData, {type: "assistant", content: content}])
         };
-        if (context.mainState.content?.type === "file") {
+        if (context.mainState.content?.type) {
             await askAiFile(input, context.mainState.content!.path, null, onUpdate);
             return;
         }
@@ -72,7 +75,7 @@ export function AiCard() {
                         exit={{
                             backdropFilter: "blur(0px)"
                         }}
-                        className="fixed w-screen h-screen bg-black/40 z-20 left-0 top-0"
+                        className="fixed w-screen h-dvh bg-black/50 z-20 left-0 top-0"
                         onClick={() => setOpen(false)}
                     >
                     </motion.div>
@@ -99,7 +102,7 @@ export function AiCard() {
                     maxWidth: "60px",
                     height: "60px",
                     borderRadius: "30px",
-                    bottom: "40px",
+                    bottom: isMobile ? "55px" : "40px",
                     right: "5%",
                     position: "fixed",
                 }
@@ -110,7 +113,9 @@ export function AiCard() {
                 {
                     open ? (
                         <div className="flex items-center h-full p-5 space-x-1">
-                            <textarea value={input} onChange={e => { setInput(e.target.value) }} className="focus:outline-none flex-1 resize-none" placeholder="Ask ai"></textarea>
+                            <textarea value={input} onChange={e => { setInput(e.target.value) }} className="focus:outline-none flex-1 resize-none" placeholder={
+                                context.mainState.content?.type === "file" ? "Ask me anything about this note" : 
+                                context.mainState.content?.type === "directory" ? "Ask me to search something in this folder" : "Ask ai"}></textarea>
                             <div className="bg-primary p-2 rounded-full flex items-center">
                                 <SendHorizonal onClick={onSend} color="var(--primary-foreground)" />
                             </div>
@@ -133,9 +138,9 @@ export function AiCard() {
                     
                 }
             </motion.div>
-            {open && <div ref={scrollRef} className="fixed max-w-250 w-full inset-x-0 mx-auto top-0 z-30 flex flex-col p-10 h-[calc(100%-160px)] space-y-2 overflow-y-auto">
+            {open && <div className="fixed max-w-260 w-full inset-x-0 mx-auto top-0 z-30 flex flex-col p-10 h-[calc(100%-160px)] space-y-2 overflow-y-auto">
                 {data.map(e => {
-                    let className = "whitespace-pre-wrap shrink-0 max-w-150 p-2 px-5 rounded-[30px] min-h-10" + (e.type === "user" ? " ml-auto bg-primary text-primary-foreground" : " mr-auto bg-primary-foreground")
+                    let className = "whitespace-pre-wrap shrink-0 max-w-170 p-2 px-5 rounded-[30px] min-h-10" + (e.type === "user" ? " ml-auto bg-primary text-primary-foreground" : " mr-auto bg-primary-foreground")
                     let content = e.content;
                     const split = e.content.replaceAll("\n", " ").split(" ");
                     console.log(split)
@@ -152,6 +157,12 @@ export function AiCard() {
                         return <div className={className}><Markdown>{content}</Markdown></div>
                     return <motion.div initial={{ scale: 0 }} animate={{ scale: 1}} layout className={className}><Markdown>{content}</Markdown></motion.div>
                 })}
+                <div ref={scrollRef}></div>
+            </div>}
+            {isMobile && open && <div className="fixed z-50 top-3 right-3">
+                <Button onClick={() => setOpen(false)} variant="outline">
+                    <XIcon />
+                </Button>
             </div>}
         </>
     , document.body)

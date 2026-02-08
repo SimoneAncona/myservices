@@ -7,6 +7,8 @@ from pydantic import BaseModel, model_validator
 from fastapi.middleware.cors import CORSMiddleware
 from src.ai import generate_stream
 import sys
+import zipfile
+import time
 
 app = FastAPI()
 
@@ -180,6 +182,28 @@ def check_lock(path: Path, key: str | None):
             if key_file.read() != key:
                 raise HTTPException(status_code=403, detail="Key is not valid")
             
+def zip_directory(directory_path, zip_path):
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        for root, dirs, files in os.walk(directory_path):
+            for file in files:
+                zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), os.path.join(directory_path, '..')))
+
+def list_files(startpath: Path):
+    startpath = Path(startpath)
+    res = ""
+
+    for root in startpath.rglob('*'):
+        if root.is_dir():
+            level = len(root.relative_to(startpath).parts)
+            indent = '-' * 4 * level
+            res += f"{indent} DIR - {root.name}\n"
+        else:
+            level = len(root.parent.relative_to(startpath).parts)
+            indent = '-' * 4 * (level + 1)
+            res += f"{indent} FILE - {root.name}\n"
+
+    return res
+
 def auth_required(authorization: str | None = Header(None)):
     if data.token is None:
         return
@@ -207,9 +231,6 @@ def get_root_files():
 @app.post("/files/{subpath:path}", dependencies=[Depends(auth_required)])
 def get_sub_notes(subpath: str, key: KeyModel | None = Body(default=None)):
     target_path = (FILE_ROOT_PATH / subpath).resolve()
-
-    if not str(target_path).startswith(str(FILE_ROOT_PATH)):
-        raise HTTPException(status_code=400, detail="Path is not valid")
     
     check_lock(target_path, None if key is None else key.key)
     
@@ -218,6 +239,29 @@ def get_sub_notes(subpath: str, key: KeyModel | None = Body(default=None)):
             return Response(f.read(), media_type='application/octet-stream')
 
     return list_directory(target_path)
+
+@app.post("/zip/{subpath:path}", dependencies=[Depends(auth_required)])
+def zip_folder(subpath: str, key: KeyModel | None = Body(default=None)):
+    target_path = (FILE_ROOT_PATH / subpath).resolve()
+    
+    check_lock(target_path, None if key is None else key.key)
+    
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="Directory not found")
+
+    if target_path.is_file():
+        raise HTTPException(status_code=400, detail="Path is a file")
+
+    try:
+        zip_path = (FILE_ROOT_PATH / f"tmp{time.time()}.zip").resolve()
+        zip_directory(target_path, zip_path)
+        with open(zip_path, "rb") as f:
+            return Response(f.read(), media_type='application/zip')
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="An error occurred")
+    finally:
+        os.remove(zip_path)
 
 @app.put("/files/{subpath:path}", dependencies=[Depends(auth_required)], status_code=204)
 async def put_file(subpath: str, key: str | None = Form(default=None), file: UploadFile | None = File(default=None)):
@@ -301,20 +345,31 @@ async def ask_ai_files(subpath: str, body: PromptKeyModel):
     
     check_lock(target_path, body.key)
 
-    system_prompt = f"""
-    You are a useful assistant, your task is to read the following file and
-    reply to the user questions as best as you can, one question could be: can
-    you make a summary of this file?
 
-    ======================= STARTING FILE ==========================
-    {{file}}
-    ======================= END OF FILE ============================
-    """
-
-    print(target_path)
     if target_path.is_file():
+        system_prompt = f"""
+        You are a useful assistant, your task is to read the following file and
+        reply to the user questions as best as you can, one question could be: can
+        you make a summary of this file?
+
+        ======================= STARTING FILE ==========================
+        {{file}}
+        ======================= END OF FILE ============================
+        """
         with open(target_path, "r", encoding="utf-8") as f:
             return StreamingResponse(generate_stream(system=system_prompt.replace("{file}", f.read()), prompt=body.prompt), media_type="text/plain")
 
     else:
-        return Response(status_code=204)
+        system_prompt = f"""
+        You are a useful assistant, your task is to read the folder structure
+        and help the user find files or more, one question could be: where
+        is the note about German history 1800-1850
+
+        The folder structure uses `-' to indicate the depth level, and DIR - or
+        FILE - to indicate the type of item
+
+        ======================= STARTING FOLDER TREE ==========================
+        {{folder}}
+        ======================= END OF FOLDER TREE ============================
+        """
+        return StreamingResponse(generate_stream(system=system_prompt.replace("{folder}", list_files(target_path)), prompt=body.prompt), media_type="text/plain")

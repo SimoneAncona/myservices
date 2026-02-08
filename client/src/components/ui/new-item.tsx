@@ -29,11 +29,11 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
                 toast.error("Error creating new item");
                 return;
             }
-            const alreadyExists = files.filter(x => x.name == name + (type === "file" ? ".md" : ""))
+            const alreadyExists = files.filter(x => x.name == name + (type === "file" ? ".note" : ""))
             if (alreadyExists.length !== 0)
                 toast.error(`The ${type} already exists`);
             else {
-                if (type === "file") await upsertFile(path + name + ".md", null, new Blob());
+                if (type === "file") await upsertFile(path + name + ".note", null, new Blob());
                 else await upsertFolder(path + name, null);
                 onChange();
                 setOpen(false);
