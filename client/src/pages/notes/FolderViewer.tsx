@@ -1,24 +1,24 @@
 import { toast } from "sonner";
-import { LockAlert } from "./components/ui/lock-alert";
+import { LockAlert } from "../../components/ui/lock-alert";
 import { useContext, useEffect, useState } from "react";
-import { getFolder } from "./api/requests";
-import { ConfigContext } from "./store/config";
-import { Button } from "./components/ui/button";
+import { getFolder } from "../../api/requests";
+import { Button } from "../../components/ui/button";
 import { Folder, File } from "lucide-react";
-import { ItemOptions } from "./components/ui/path";
+import { ItemOptions } from "../../components/ui/path";
 import { useQuery } from "@tanstack/react-query";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./components/ui/tooltip";
-import { Kbd, KbdGroup } from "./components/ui/kbd";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../components/ui/tooltip";
+import { Kbd, KbdGroup } from "../../components/ui/kbd";
+import { NoteContext } from "./store/config";
 
 
 export function FolderViewer() {
-  const context = useContext(ConfigContext);
+  const context = useContext(NoteContext);
   const [lockPassword, setLockPassword] = useState(null as string | null);
   const { error, data } = useQuery({
     queryKey: ["folder", context, lockPassword],
     queryFn: async () => {
       setIsLocked(false);
-      return await getFolder(context.mainState.content!.path, lockPassword, () => { 
+      return await getFolder(context.content!.path, lockPassword, () => { 
         if (lockPassword !== null) toast.error("Wrong password");
         setIsLocked(true) 
       });
@@ -32,20 +32,20 @@ export function FolderViewer() {
       const key = Number(e.key);
       if (e.altKey && !Number.isNaN(key)) {
         e.preventDefault();
-        context.mainState.setContent({
-          path: `${context.mainState.content!.path}/${data[key - 1].name}`,
+        context.setContent({
+          path: `${context.content!.path}/${data[key - 1].name}`,
           type: data[key - 1].type
         })
       }
       if (e.ctrlKey && e.key === "ArrowLeft") {
         e.preventDefault();
-        const split = context.mainState.content!.path.split("/");
+        const split = context.content!.path.split("/");
         split.pop();
         if (split.length === 0) {
-          context.mainState.setContent(null);
+          context.setContent(null);
           return;
         }
-        context.mainState.setContent({
+        context.setContent({
           path: split.join("/"),
           type: "directory"
         })
@@ -69,9 +69,9 @@ export function FolderViewer() {
                   key={i}
                   variant={"ghost"}
                   className="flex justify-start hover:cursor-pointer w-full"
-                  onClick={() => context.mainState.setContent({
+                  onClick={() => context.setContent({
                     type: x.type,
-                    path: `${context.mainState.content!.path}/${x.name}`,
+                    path: `${context.content!.path}/${x.name}`,
                   })}
                 >
                   {x.type === "file" ? <File size={"20px"} fill="var(--accent)" strokeWidth={0} /> : <Folder fill="var(--accent)" strokeWidth={0} />}

@@ -8,7 +8,7 @@ import { getFolder, upsertFile, upsertFolder } from "../../api/requests"
 import { toast } from "sonner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 import { Kbd, KbdGroup } from "./kbd"
-import { ConfigContext } from "@/store/config"
+import { NoteContext } from "@/pages/notes/store/config"
 
 type Prop = {
     type: "file" | "directory",
@@ -20,7 +20,7 @@ type Prop = {
 export function NewItem({ type, path, onChange, variant } : Prop) {
     const [name, setName] = useState("");
     const [open, setOpen] = useState(false);
-    const context = useContext(ConfigContext);
+    const context = useContext(NoteContext);
 
     const createItem = async () => {
         try {
@@ -48,7 +48,7 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
     
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
-            if (path === "" && context.mainState.content) return;
+            if (path === "" && context.content) return;
             if (e.ctrlKey && e.key === "g" && type === "file") {
                 e.preventDefault();
                 setOpen(true);
@@ -72,7 +72,7 @@ export function NewItem({ type, path, onChange, variant } : Prop) {
                             {type === "file" ? <FilePlus /> : <FolderPlus />}
                         </Button>
                     </TooltipTrigger>
-                    {(path !== "" || (path === "" && !context.mainState.content)) && <TooltipContent>
+                    {(path !== "" || (path === "" && !context.content)) && <TooltipContent>
                         <KbdGroup>
                             <Kbd>CTRL</Kbd>
                             <span>+</span>

@@ -18,8 +18,9 @@ import { Bold, CheckSquare, Heading1, Heading2, Italic, List, TextIcon } from "l
 import { ItemOptions } from "@/components/ui/path";
 import { Placeholder } from '@tiptap/extensions'
 import { useQuery } from '@tanstack/react-query'
-import { handleDownload } from "./lib/utils";
+import { handleDownload } from "../../lib/utils";
 import { useMediaQuery } from "react-responsive";
+import { NoteContext } from "./store/config";
 
 const convertToMd = (html: string) => {
   for (let i = 1; i <= 5; i++) 
@@ -48,21 +49,22 @@ const convertToMd = (html: string) => {
 }
 
 export function FileEditor() {
-  const context = useContext(ConfigContext);
+  const context = useContext(NoteContext);
+  const mainContext = useContext(ConfigContext);
   const [lockPassword, setLockPassword] = useState(null as string | null);
   const [isLocked, setIsLocked] = useState(false);
   const { isError, data } = useQuery({
-    queryKey: [lockPassword, context.mainState.content?.path, "file"],
+    queryKey: [lockPassword, context.content?.path, "file"],
     queryFn: async () => {
       setIsLocked(false);
-      return await getFile(context.mainState.content!.path, lockPassword, () => {
+      return await getFile(context.content!.path, lockPassword, () => {
         if (lockPassword !== null) toast.error("Wrong password");
         setIsLocked(true);
       })
     }
   });
   const isMobile = useMediaQuery({ maxWidth: 800 });
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches && context.theme === "system" || context.theme === "dark";
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches && mainContext.theme === "system" || mainContext.theme === "dark";
   const editor = useEditor({
     extensions: [
         StarterKit.configure({
@@ -128,7 +130,7 @@ export function FileEditor() {
    
     const onUpdate = () => {
       if (timeoutId) clearTimeout(timeoutId);
-      const path = context.mainState.content!.path;
+      const path = context.content!.path;
       const content = editor.getHTML();
       const key = lockPassword;
       timeoutId = setTimeout(() => {
@@ -142,22 +144,22 @@ export function FileEditor() {
 
     editor.on("update", onUpdate);
     return () => { editor.off("update", onUpdate); }
-  }, [saveFile, context.mainState.content, editor, lockPassword]);
+  }, [saveFile, context.content, editor, lockPassword]);
 
   useEffect(() => {
     if (editor && data !== undefined) {
       editor.commands.clearContent(true);
       editor.commands.setContent(data);
     }
-  }, [editor, data, context.mainState.content?.path]);
+  }, [editor, data, context.content?.path]);
 
   useEffect(() => {
     const handleKeys = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "ArrowLeft") {
         e.preventDefault();
-        const split = context.mainState.content!.path.split("/");
+        const split = context.content!.path.split("/");
         split.pop()
-        context.mainState.setContent({
+        context.setContent({
           path: split.join("/"),
           type: "directory"
         })
@@ -167,7 +169,7 @@ export function FileEditor() {
     return () => { document.removeEventListener("keydown", handleKeys, true); }
   })
 
-  if (context.mainState.content === null) return <></>;
+  if (context.content === null) return <></>;
 
   const size = !isMobile ? "sm" : "lg";
   const variant = !isMobile ? "outline" : "ghost"
@@ -212,7 +214,7 @@ export function FileEditor() {
       <ItemOptions lock={lockPassword} onDownload={e => {
         let content = editor.getHTML();
         content = content.replace(/<(\w+)(\s+[^>]+?)?>/g, '<$1>');
-        const filename = context.mainState.content!.path.split("/").pop()!.split(".")[0];
+        const filename = context.content!.path.split("/").pop()!.split(".")[0];
         if (e === "html") {
           handleDownload(filename + ".html", content)
           return

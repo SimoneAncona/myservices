@@ -3,7 +3,6 @@ import { Button } from "./button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
 import { NewItem } from "./new-item";
 import { useContext, useState } from "react";
-import { ConfigContext } from "@/store/config";
 import { deleteFile, downloadZip } from "@/api/requests";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +11,8 @@ import { useMediaQuery } from "react-responsive";
 import { ButtonGroup } from "./button-group";
 import { handleDownloadBinary } from "@/lib/utils";
 import { SidebarTrigger } from "./sidebar-trigger";
+import { NoteContext } from "@/pages/notes/store/config";
+import { ConfigContext } from "@/store/config";
 
 type Prop = {
   lock: string | null
@@ -25,26 +26,33 @@ export function ItemOptions({ lock, onDownload }: Prop) {
   const invalidateFolder = () => { queryClient.invalidateQueries({ queryKey: ["folder"] }) }
   const isMobile = useMediaQuery({ maxWidth: 800 });
 
+  const context = useContext(NoteContext);
+  const mainContext = useContext(ConfigContext);
   const downloadFolder = async () => {
-    const response = await downloadZip(context.mainState.content!.path, lock);
-    handleDownloadBinary(context.mainState.content!.path.split("/").pop() + ".zip", new Blob([response], { type: "application/zip" }))
+    const response = await downloadZip(context.content!.path, lock);
+    handleDownloadBinary(context.content!.path.split("/").pop() + ".zip", new Blob([response], { type: "application/zip" }))
   }
 
-  const context = useContext(ConfigContext);
-  if (context.mainState.content === null) return;
-  const split = context.mainState.content.path.split("/");
+  if (context.content === null) return;
+  const handleDelete = () => {
+    context.setContent(null);
+    deleteFile(context.content!.path, lock).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["root"] });
+    }).catch(() => toast.error("Cannot delete file"));
+  }
+  const split = context.content.path.split("/");
   split[split.length - 1] = split[split.length - 1].split(".")[0];
   return (
     <div className={"flex justify-between space-y-2" + (!isMobile ? " flex-col" : "")}>
       <div className="space-x-2">
         <SidebarTrigger />
         {isMobile && <Button variant="outline" onClick={() => {
-          const newPath = context.mainState.content!.path.split("/").slice(0, -1).join("/");
+          const newPath = context.content!.path.split("/").slice(0, -1).join("/");
           if (!newPath) {
-            context.mainState.setContent(null);
+            context.setContent(null);
             return
           }
-          context.mainState.setContent({
+          context.setContent({
             path: newPath,
             type: "directory"
           })
@@ -62,7 +70,7 @@ export function ItemOptions({ lock, onDownload }: Prop) {
                     className="hover:text-accent"
                     size="lg"
                     variant="link"
-                    onClick={(i < split.length - 1) ? () => context.mainState.setContent({
+                    onClick={(i < split.length - 1) ? () => context.setContent({
                       path: split.slice(0, i + 1).join("/"),
                       type: "directory",
                     }) : () => { }}
@@ -77,13 +85,13 @@ export function ItemOptions({ lock, onDownload }: Prop) {
         </div>}
         <div className="flex items-center space-x-2 justify-end">
           {
-            context.mainState.content.type === "directory" &&
+            context.content.type === "directory" &&
             <ButtonGroup>
-              <NewItem type="file" path={context.mainState.content.path + "/"} onChange={invalidateFolder} variant="big" />
-              <NewItem type="directory" path={context.mainState.content.path + "/"} onChange={invalidateFolder} variant="big" />
+              <NewItem type="file" path={context.content.path + "/"} onChange={invalidateFolder} variant="big" />
+              <NewItem type="directory" path={context.content.path + "/"} onChange={invalidateFolder} variant="big" />
             </ButtonGroup>
           }
-          {context.mainState.content.type === "file" ? <DropdownMenu>
+          {context.content.type === "file" ? <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="outline" className="text-accent">
                 <Download />
@@ -102,7 +110,7 @@ export function ItemOptions({ lock, onDownload }: Prop) {
               <Download />
             </Button>
           }
-          <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+          {mainContext.deleteConfirmation ? <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
             <DialogTrigger asChild>
               <Button variant="destructive">
                 <Trash2 />
@@ -114,15 +122,14 @@ export function ItemOptions({ lock, onDownload }: Prop) {
               </DialogHeader>
               <DialogFooter>
                 <Button variant="outline" onClick={() => { setOpenDeleteDialog(false); }}>Cancel</Button>
-                <Button variant="destructive" onClick={() => {
-                  context.mainState.setContent(null);
-                  deleteFile(context.mainState.content!.path, lock).then(() => {
-                    queryClient.invalidateQueries({ queryKey: ["root"] });
-                  }).catch(() => toast.error("Cannot delete file"));
-                }}>Confirm</Button>
+                <Button variant="destructive" onClick={handleDelete}>Confirm</Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+          </Dialog> :
+          <Button onClick={handleDelete} variant="destructive">
+            <Trash2 />
+          </Button>
+          }
         </div>
       </div>
     </div>

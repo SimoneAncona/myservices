@@ -3,7 +3,7 @@ import { Input } from "./input";
 import { Label } from "./label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./dialog";
 import { Button } from "./button";
-import { ConfigContext } from "@/store/config";
+import { NoteContext } from "@/pages/notes/store/config";
 
 type Prop = {
   setLockPassword: (x: string) => void,
@@ -12,13 +12,13 @@ type Prop = {
 export function LockAlert({ setLockPassword }: Prop) {
   const [open, setOpen] = useState(true);
   const [password, setPassword] = useState("");
-  const context = useContext(ConfigContext);
-  if (context.mainState.content === null) return;
+  const context = useContext(NoteContext);
+  if (context.content === null) return;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>This {context.mainState.content?.type} is locked</DialogTitle>
+          <DialogTitle>This {context.content?.type} is locked</DialogTitle>
           <DialogDescription>
             Write the password to unlock the file
           </DialogDescription>
@@ -33,7 +33,7 @@ export function LockAlert({ setLockPassword }: Prop) {
           }} type="password" onChange={(e) => setPassword(e.target.value)}/>
         </div>
         <DialogFooter>
-          <Button onClick={() => {setOpen(false); context.mainState.setContent(null)}}>Cancel</Button>
+          <Button onClick={() => {setOpen(false); context.setContent(null)}}>Cancel</Button>
           <Button onClick={() => {setLockPassword(password)}}>Continue</Button>
         </DialogFooter>
       </DialogContent>

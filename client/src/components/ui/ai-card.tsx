@@ -5,10 +5,10 @@ import { SendHorizonal, Sparkles, XIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 import { Kbd, KbdGroup } from "./kbd";
 import { askAi, askAiFile } from "@/api/requests";
-import { ConfigContext } from "@/store/config";
 import Markdown from "react-markdown";
 import { useMediaQuery } from "react-responsive";
 import { Button } from "./button";
+import { NoteContext } from "@/pages/notes/store/config";
 
 type AiMessage = {
     type: "assistant" | "user"
@@ -20,7 +20,7 @@ export function AiCard() {
     const [input, setInput] = useState("");
     const [data, setData] = useState([] as AiMessage[]);
     const scrollRef = useRef(null as HTMLDivElement | null);
-    const context = useContext(ConfigContext);
+    const context = useContext(NoteContext);
     const isMobile = useMediaQuery({ maxWidth: 800 });
 
      const onSend = async () => {
@@ -32,8 +32,8 @@ export function AiCard() {
             content = content + t
             setData([...updatedData, {type: "assistant", content: content}])
         };
-        if (context.mainState.content?.type) {
-            await askAiFile(input, context.mainState.content!.path, null, onUpdate);
+        if (context.content?.type) {
+            await askAiFile(input, context.content!.path, null, onUpdate);
             return;
         }
         await askAi(input, onUpdate)
@@ -114,8 +114,8 @@ export function AiCard() {
                     open ? (
                         <div className="flex items-center h-full p-5 space-x-1">
                             <textarea value={input} onChange={e => { setInput(e.target.value) }} className="focus:outline-none flex-1 resize-none" placeholder={
-                                context.mainState.content?.type === "file" ? "Ask me anything about this note" : 
-                                context.mainState.content?.type === "directory" ? "Ask me to search something in this folder" : "Ask ai"}></textarea>
+                                context.content?.type === "file" ? "Ask me anything about this note" : 
+                                context.content?.type === "directory" ? "Ask me to search something in this folder" : "Ask ai"}></textarea>
                             <div className="bg-primary p-2 rounded-full flex items-center">
                                 <SendHorizonal onClick={onSend} color="var(--primary-foreground)" />
                             </div>

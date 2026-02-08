@@ -5,7 +5,6 @@ import { getFiles, updateConfig } from "../../api/requests";
 import { toast } from "sonner";
 import { Skeleton } from "./skeleton";
 import { Button } from "./button";
-import { ConfigContext } from "../../store/config";
 import { NewItem } from "./new-item";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
@@ -16,6 +15,8 @@ import { Checkbox } from "./checkbox";
 import { COLORS, ColorType } from "@/types/requests";
 import { getColor } from "@/lib/utils";
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group";
+import { NoteContext } from "@/pages/notes/store/config";
+import { ConfigContext } from "@/store/config";
 
 type AcceptedConfigValues = {
   primaryColor: ColorType,
@@ -26,16 +27,17 @@ type AcceptedConfigValues = {
 
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar();
-  const context = useContext(ConfigContext);
+  const context = useContext(NoteContext);
+  const mainContext = useContext(ConfigContext);
   const { isError, data } = useQuery({
     queryKey: ["root"],
     queryFn: getFiles
   })
   const queryClient = useQueryClient();
   const [config, setConfig] = useState({
-    primaryColor: context.primaryColor,
-    deleteConfirmation: context.deleteConfirmation,
-    theme: context.theme
+    primaryColor: mainContext.primaryColor,
+    deleteConfirmation: mainContext.deleteConfirmation,
+    theme: mainContext.theme
   } satisfies AcceptedConfigValues);
   if (isError) toast.error("Cannot get root");
   const [open, setOpen] = useState(false)
@@ -46,7 +48,7 @@ export function AppSidebar() {
       const key = Number(e.key);
       if (e.ctrlKey && !Number.isNaN(key)) {
         e.preventDefault();
-        context.mainState.setContent({
+        context.setContent({
           path: data[key - 1].name,
           type: data[key - 1].type
         })
@@ -66,7 +68,7 @@ export function AppSidebar() {
   }
 
   const applyConfig = async () => {
-    await updateConfig({...config, standalone: context.standalone});
+    await updateConfig({...config, standalone: mainContext.standalone});
     queryClient.invalidateQueries({queryKey: ["config"]});
   }
 
@@ -98,7 +100,7 @@ export function AppSidebar() {
                       variant={"ghost"}
                       className="flex justify-start overflow-x-clip w-full"
                       onClick={() => {
-                        context.mainState.setContent({
+                        context.setContent({
                           type: x.type,
                           path: x.name,
                         });
