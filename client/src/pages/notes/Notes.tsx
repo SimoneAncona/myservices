@@ -10,6 +10,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar-trigger";
 import { NoteContext } from "@/pages/notes/store/config";
 import { CurrentContent, NoteContextType } from "@/pages/notes/types/context";
 import { HomePanel } from "@/components/ui/common/home-panel";
+import { isStandalone } from "@/lib/utils";
 
 
 function Notes() {
@@ -53,8 +54,8 @@ function Notes() {
         <NoteContext.Provider value={contextLeft}>
           <AppSidebar />
           <Toaster />
-          <main className="p-3 w-full flex flex-col h-dvh overflow-hidden">
-            { !content[0] && <div><SidebarTrigger/></div> }
+          <main className={"p-3 w-full flex flex-col h-dvh overflow-hidden" + (isStandalone() ? " pt-8" : "")}>
+            { !content[0] && <div className="p-1 px-2"><SidebarTrigger/></div> }
             { mainContext.askai && <AiCard /> }
             {
               content[0] === null ?
@@ -65,7 +66,6 @@ function Notes() {
                 content[0].type === "file" ? <FileEditor /> : <FolderViewer />
             }
           </main>
-          
         </NoteContext.Provider>
         {content[1] && 
         <NoteContext.Provider value={contextRight}>

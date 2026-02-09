@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { HashRouter, Route, Routes } from "react-router-dom"
 import Notes from "@/pages/notes/Notes"
 import Home from "@/pages/home/Home"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -99,12 +99,12 @@ function App() {
   return (
     data ?
       <ConfigContext.Provider value={data}>
-        <BrowserRouter>
+        <HashRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/notes" element={<Notes />} />
           </Routes>
-        </BrowserRouter>
+        </HashRouter>
       </ConfigContext.Provider>
     :
     <div>

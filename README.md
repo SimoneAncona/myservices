@@ -5,8 +5,8 @@
 Run the `./build.sh` script to build the project  
 Available options:
 - **none**: build the project for no specific targe
-- **win**: build standalone application for Windows (WIP)
-- **linux**: build standalone application for Linux (WIP)
+- **win**: build standalone application for Windows (client only)
+- **linux**: build standalone application for Linux (client only)
 - **docker**: build the service for Docker (WIP)
 
 ### Additional dependencies required:

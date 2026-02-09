@@ -140,3 +140,7 @@
   background: gray; 
   border-radius: 10px;
 }
+
+.selectedCell {
+  border: 1px solid var(--accent);
+}

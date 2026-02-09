@@ -11,7 +11,7 @@ const COLOR_MAP = {
   "red": "#ff4f42",
   "green": "#57d957",
   "blue": "#3b45f7",
-  "yellow": "#f7ff61",
+  "yellow": "#e8cf2e",
   "cyan": "#4de7f0",
   "magenta": "#e65cf2"
 }
@@ -37,4 +37,8 @@ export function handleDownloadBinary(fileName: string, content: Blob) {
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
+}
+
+export function isStandalone() {
+  return localStorage.getItem("standalone") !== null
 }

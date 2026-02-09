@@ -104,9 +104,9 @@ export function ItemOptions({ lock, onDownload }: Prop) {
                       type: "directory",
                     }) : () => { }}
                   >
-                    <h2 className="text-xl">{e}</h2>
+                    <h2 className="text-lg">{e}</h2>
                   </Button>
-                  {i < split.length - 1 && <h2 className="text-xl">/</h2>}
+                  {i < split.length - 1 && <h2 className="text-lg">/</h2>}
                   {i == split.length - 1 && 
                   <Tooltip delayDuration={700}>
                     <TooltipTrigger asChild>

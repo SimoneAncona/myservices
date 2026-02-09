@@ -14,13 +14,14 @@ import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import Heading from "@tiptap/extension-heading";
 import { Button } from "@/components/ui/button";
-import { Bold, CheckSquare, Heading1, Heading2, Italic, List, TextIcon } from "lucide-react";
+import { Bold, CheckSquare, Heading1, Heading2, Italic, List, Table2, TextIcon } from "lucide-react";
 import { ItemOptions } from "@/components/ui/notes/path";
 import { Placeholder } from '@tiptap/extensions'
 import { useQuery } from '@tanstack/react-query'
 import { handleDownload } from "@/lib/utils";
 import { useMediaQuery } from "react-responsive";
 import { NoteContext } from "@/pages/notes/store/config";
+import { TableCreator } from "@/components/ui/notes/table-popover";
 
 const convertToMd = (html: string) => {
   for (let i = 1; i <= 5; i++) 
@@ -65,6 +66,20 @@ export function FileEditor() {
   });
   const isMobile = useMediaQuery({ maxWidth: 800 });
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches && mainContext.theme === "system" || mainContext.theme === "dark";
+  const CustomTable = Table.extend({
+    addKeyboardShortcuts() {
+      return {
+        ...this.parent?.(),
+        'Delete': () => {
+          return this.editor.commands.deleteSelection()
+        },
+        'Backspace': () => {
+          return this.editor.commands.deleteSelection()
+        },
+      }
+    },
+  })
+  
   const editor = useEditor({
     extensions: [
         StarterKit.configure({
@@ -92,10 +107,27 @@ export function FileEditor() {
             }
           }
         ),
-        Table.configure({ resizable: true }),
-        TableRow,
+        CustomTable.configure(
+          { 
+            resizable: true,
+            allowTableNodeSelection: true,
+            lastColumnResizable: true,
+            HTMLAttributes: {
+              class: "border"
+            }
+          }
+        ),
+        TableRow.configure({
+          HTMLAttributes: {
+            class: "border"
+          }
+        }),
         TableHeader,
-        TableCell,
+        TableCell.configure({
+          HTMLAttributes: {
+            class: "border border-spacing-4 border-separate"
+          }
+        }),
         Placeholder.configure({
           placeholder: "Write something...",
           emptyEditorClass:
@@ -171,15 +203,14 @@ export function FileEditor() {
       <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().clearNodes().toggleTaskList().run()}>
         <CheckSquare />
       </Button>
-      {/* <Button
-        variant="outline"
-        size="sm"
-        onClick={() =>
-        editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-        }
-      >
-        <Table2 />
-      </Button> */}
+      <TableCreator editor={editor}>
+        <Button
+          onMouseDown={(e) => e.preventDefault()}
+          variant={variant}
+          size={size}>
+          <Table2 />
+        </Button>
+      </TableCreator>
       <Button className="shrink" variant={variant} size={size} onClick={() => editor.chain().focus().setParagraph().run()}>
         <TextIcon />
       </Button>

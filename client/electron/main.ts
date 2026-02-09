@@ -13,5 +13,6 @@ function createWindow() {
       symbolColor: theme === 'dark' ? '#ffffff' : '#000000'
     });
   });
+  win.webContents.openDevTools();
 }
 app.whenReady().then(createWindow);
