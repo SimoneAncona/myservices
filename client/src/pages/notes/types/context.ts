@@ -4,6 +4,8 @@ export type CurrentContent = {
 }
 
 export type NoteContextType = {
-    content: CurrentContent | null,
-    setContent: (e: CurrentContent | null) => void
+  content: CurrentContent | null,
+  setContent: (e: CurrentContent | null) => void
+  setOtherContent: (e: CurrentContent | null) => void
+  currentWindow: "right" | "left"
 }

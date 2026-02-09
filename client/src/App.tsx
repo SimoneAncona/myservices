@@ -1,6 +1,6 @@
-// import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
 import Notes from "@/pages/notes/Notes"
-// import Home from "@/pages/home/Home"
+import Home from "@/pages/home/Home"
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
@@ -99,13 +99,12 @@ function App() {
   return (
     data ?
       <ConfigContext.Provider value={data}>
-        <Notes/>
-        {/* <BrowserRouter>
+        <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/notes" element={<Notes />} />
           </Routes>
-        </BrowserRouter> */}
+        </BrowserRouter>
       </ConfigContext.Provider>
     :
     <div>

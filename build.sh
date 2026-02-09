@@ -18,12 +18,10 @@ case "$TARGET" in
     ;;
   
   linux)
-    echo "Eseguo script per ambiente TEST"
     ./scripts/build-linux-amd64.sh
     ;;
   
   docker)
-    echo "Eseguo script per ambiente PROD"
     ./scripts/build-docker.sh
     ;;
   

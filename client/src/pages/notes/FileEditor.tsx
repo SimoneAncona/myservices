@@ -15,12 +15,12 @@ import TableHeader from "@tiptap/extension-table-header";
 import Heading from "@tiptap/extension-heading";
 import { Button } from "@/components/ui/button";
 import { Bold, CheckSquare, Heading1, Heading2, Italic, List, TextIcon } from "lucide-react";
-import { ItemOptions } from "@/components/ui/path";
+import { ItemOptions } from "@/components/ui/notes/path";
 import { Placeholder } from '@tiptap/extensions'
 import { useQuery } from '@tanstack/react-query'
-import { handleDownload } from "../../lib/utils";
+import { handleDownload } from "@/lib/utils";
 import { useMediaQuery } from "react-responsive";
-import { NoteContext } from "./store/config";
+import { NoteContext } from "@/pages/notes/store/config";
 
 const convertToMd = (html: string) => {
   for (let i = 1; i <= 5; i++) 
@@ -152,22 +152,6 @@ export function FileEditor() {
       editor.commands.setContent(data);
     }
   }, [editor, data, context.content?.path]);
-
-  useEffect(() => {
-    const handleKeys = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "ArrowLeft") {
-        e.preventDefault();
-        const split = context.content!.path.split("/");
-        split.pop()
-        context.setContent({
-          path: split.join("/"),
-          type: "directory"
-        })
-      }
-    }
-    document.addEventListener("keydown", handleKeys, true);
-    return () => { document.removeEventListener("keydown", handleKeys, true); }
-  })
 
   if (context.content === null) return <></>;
 

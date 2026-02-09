@@ -3,5 +3,7 @@ import { NoteContextType } from "../types/context";
 
 export const NoteContext = createContext({
   content: null,
-  setContent: () => {}
+  setContent: () => {},
+  setOtherContent: () => {},
+  currentWindow: "left"
 } as NoteContextType);

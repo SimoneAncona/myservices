@@ -1,22 +1,23 @@
 import { NotebookPen, File, Folder, /*Settings,*/ LockKeyholeIcon, Settings } from "lucide-react"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, useSidebar } from "./sidebar"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarHeader, useSidebar } from "@/components/ui/sidebar"
 import { useContext, useEffect, useState } from "react"
-import { getFiles, updateConfig } from "../../api/requests";
+import { getFiles, updateConfig } from "@/api/requests";
 import { toast } from "sonner";
-import { Skeleton } from "./skeleton";
-import { Button } from "./button";
-import { NewItem } from "./new-item";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { NewItem } from "@/components/ui/notes/new-item";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
-import { Kbd, KbdGroup } from "./kbd";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
-import { Label } from "./label";
-import { Checkbox } from "./checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
+import { Kbd, KbdGroup } from "../kbd";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { COLORS, ColorType } from "@/types/requests";
 import { getColor } from "@/lib/utils";
-import { ToggleGroup, ToggleGroupItem } from "./toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { NoteContext } from "@/pages/notes/store/config";
 import { ConfigContext } from "@/store/config";
+import { FileContext } from "./right-context";
 
 type AcceptedConfigValues = {
   primaryColor: ColorType,
@@ -46,7 +47,7 @@ export function AppSidebar() {
     const handleKey = (e: KeyboardEvent) => {
       if (!data) return
       const key = Number(e.key);
-      if (e.ctrlKey && !Number.isNaN(key)) {
+      if (e.ctrlKey && !e.altKey && !Number.isNaN(key)) {
         e.preventDefault();
         context.setContent({
           path: data[key - 1].name,
@@ -96,26 +97,29 @@ export function AppSidebar() {
                 <NewItem type="directory" path="" onChange={() => {queryClient.invalidateQueries({queryKey: ["root"]})}} />
               </div>
                 {data.map((x, i) => {
-                  const button = <Button
-                      variant={"ghost"}
-                      className="flex justify-start overflow-x-clip w-full"
-                      onClick={() => {
-                        context.setContent({
-                          type: x.type,
-                          path: x.name,
-                        });
-                        setOpenMobile(false);
-                      }}
-                    >
-                      {x.type === "file" ? <File className="size-5" fill="var(--accent)" strokeWidth={0} /> : <Folder className="size-5" fill="var(--accent)" strokeWidth={0} />}
-                      {x.isLocked ? <LockKeyholeIcon className="absolute translate-2 text-amber-800" fill="#EFBF04" strokeWidth={2} /> : <></>}
-                      {x.name.split(".")[0]}
-                    </Button>
+                  const button = 
+                    <FileContext path={x.name} type={x.type}>
+                      <Button
+                        variant={"ghost"}
+                        className="flex justify-start overflow-x-clip w-full"
+                        onClick={() => {
+                          context.setContent({
+                            type: x.type,
+                            path: x.name,
+                          });
+                          setOpenMobile(false);
+                        }}
+                      >
+                        {x.type === "file" ? <File className="size-5" fill="var(--accent)" strokeWidth={0} /> : <Folder className="size-5" fill="var(--accent)" strokeWidth={0} />}
+                        {x.isLocked ? <LockKeyholeIcon className="absolute translate-2 text-amber-800" fill="#EFBF04" strokeWidth={2} /> : <></>}
+                        {x.name.split(".")[0]}
+                      </Button>
+                    </FileContext>
                   return (
                     <>
                     {i < 9 ?
-                      <Tooltip delayDuration={700}>
-                        <TooltipTrigger asChild>
+                      <Tooltip delayDuration={700} key={i}>
+                        <TooltipTrigger>
                           {button}
                         </TooltipTrigger>
                         <TooltipContent side="right">
@@ -126,7 +130,7 @@ export function AppSidebar() {
                           </KbdGroup>
                         </TooltipContent>
                       </Tooltip>
-                    : button }
+                    : <FileContext path={x.name} type={x.type}>{button}</FileContext> }
                     </>
                     
                   )
